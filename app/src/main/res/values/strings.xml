@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Mera bills</string>
+    <string name="cross_icon_description">clear the add payment</string>
+    <string name="dummy_text">Your text here</string>
+    <string name="total_amount">Total Amount = </string>
+    <string name="dummy_amount">0</string>
+    <string name="add_payment">Add payment</string>
+    <string name="save">Save</string>
+    <string name="cash">Cash</string>
+    <string name="amount">Amount</string>
+    <string name="bank_transfer">Bank Transfer</string>
+    <string name="credit_card">Credit card</string>
+    <string name="provider_icici_citibank_etc">Provider (ICICI, Citibank, etc.)</string>
+    <string name="transfer_reference">Transfer reference</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="enter_amount">Kindly input the amount</string>
+    <string name="enter_bank_details">Kindly input the bank details</string>
+    <string name="enter_transaction">Kindly input the transaction reference</string>
+    <string name="entry_already_added">This entry has already been added.</string>
+    <string name="already_added">All payment options are already in the current entries. So, any new entries should be deleted and added again.</string>
+    <string name="valid_save">Please add any payment</string>
+    <string name="please_click_back_again_to_exit">Please click BACK again to exit</string>
+</resources>

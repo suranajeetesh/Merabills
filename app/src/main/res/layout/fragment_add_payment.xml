@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/txt_total_amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/total_amount"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.1" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/txt_total_amount_value"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_2"
+        android:text="@string/dummy_amount"
+        android:layout_marginEnd="@dimen/dp_20"
+        android:maxLines="3"
+        android:textStyle="bold"
+        android:scrollbars = "vertical"
+        app:layout_constraintBottom_toBottomOf="@id/txt_total_amount"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/txt_total_amount"
+        app:layout_constraintTop_toTopOf="@id/txt_total_amount" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_dashboard"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="@dimen/dp_0"
+        android:layout_marginTop="@dimen/dp_10"
+        android:layout_marginEnd="@dimen/dp_20"
+        app:layout_constraintBottom_toTopOf="@id/txt_add_payment"
+        android:layout_marginBottom="@dimen/dp_10"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.1"
+        tools:listitem="@layout/item_add_payment"
+        app:layout_constraintStart_toStartOf="@id/txt_total_amount"
+        app:layout_constraintTop_toBottomOf="@id/txt_total_amount" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/txt_add_payment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_2"
+        android:text="@string/add_payment"
+        android:textStyle="bold"
+        android:textColor="@color/btn_blue"
+        android:layout_marginBottom="@dimen/dp_20"
+        app:layout_constraintStart_toStartOf="@id/txt_total_amount"
+        app:layout_constraintBottom_toTopOf="@id/btn_save" />
+
+    <Button
+        android:id="@+id/btn_save"
+        android:layout_width="@dimen/dp_240"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/dp_80"
+        android:text="@string/save"
+        android:textColor="@color/white"
+        android:background="@drawable/shape_rounded_blue_btn"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:backgroundTint="@null"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
