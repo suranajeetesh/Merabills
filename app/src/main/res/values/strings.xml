@@ -10,6 +10,7 @@
     <string name="amount">Amount</string>
     <string name="bank_transfer">Bank Transfer</string>
     <string name="credit_card">Credit card</string>
+    <string name="other">Other</string>
     <string name="provider_icici_citibank_etc">Provider (ICICI, Citibank, etc.)</string>
     <string name="transfer_reference">Transfer reference</string>
     <string name="ok">OK</string>
@@ -21,4 +22,5 @@
     <string name="already_added">All payment options are already in the current entries. So, any new entries should be deleted and added again.</string>
     <string name="valid_save">Please add any payment</string>
     <string name="please_click_back_again_to_exit">Please click BACK again to exit</string>
+    <string name="preference_file_key" translatable="false">sharedPreference</string>
 </resources>

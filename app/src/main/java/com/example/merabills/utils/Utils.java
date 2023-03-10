@@ -12,6 +12,8 @@ import java.io.InputStreamReader;
  * Created by Jeetesh Surana.
  */
 public class Utils {
+    public static String KEY_SAVE="save";
+
     public static void saveTextToFile(Activity activity,String filename, String text) {
         try {
             FileOutputStream outputStream = activity.openFileOutput(filename, Context.MODE_PRIVATE);

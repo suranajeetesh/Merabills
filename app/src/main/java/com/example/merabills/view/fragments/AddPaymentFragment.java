@@ -1,7 +1,10 @@
 package com.example.merabills.view.fragments;
 
+import static com.example.merabills.utils.Utils.KEY_SAVE;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
@@ -24,14 +27,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.merabills.R;
 import com.example.merabills.model.Transaction;
+import com.example.merabills.utils.CustomSharedPreferences;
 import com.example.merabills.utils.Utils;
 import com.example.merabills.view.adapter.AddPaymentRVAdapter;
 import com.example.merabills.view.adapter.PaymentOptionAdapter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -46,15 +51,15 @@ public class AddPaymentFragment extends Fragment {
     private AddPaymentRVAdapter mAdapter;
     private View view;
     private final ArrayList<Transaction> data = new ArrayList<>();
-    ArrayList<String> paymentOptions =new ArrayList<>();
-    Button btnSave;
-    TextView addPayment, totalValue;
-    String selectedTitle ="";
-    String cash="";
-    String bankTransfer="";
-    String creditCard="";
-
+    private final ArrayList<String> paymentOptions = new ArrayList<>();
+    private Button btnSave;
+    private TextView addPayment, totalValue;
+    private String selectedTitle = "";
+    private String cash = "";
+    private Dialog dialog;
     private static final String FILENAME = "LastPayment.txt";
+    private MyAsyncTask myAsyncTask;
+    private CustomSharedPreferences pref;
 
     @Nullable
     @Override
@@ -73,28 +78,14 @@ public class AddPaymentFragment extends Fragment {
 
     private void init(@NonNull View view) {
         initPaymentOptions();
+        pref = new CustomSharedPreferences(requireActivity());
         btnSave = view.findViewById(R.id.btn_save);
         addPayment = view.findViewById(R.id.txt_add_payment);
         totalValue = view.findViewById(R.id.txt_total_amount_value);
         clickManagement();
-        reloadedSaveData();
-    }
-    @SuppressLint("NotifyDataSetChanged")
-    private void reloadedSaveData() {
-        String json = Utils.loadTextFromFile(getActivity(),FILENAME);
-
-        if (json != null) {
-            Gson gson = new Gson();
-            Type type = new TypeToken<ArrayList<Transaction>>(){}.getType();
-            ArrayList<Transaction> list = gson.fromJson(json, type);
-            if (!list.isEmpty()) {
-                data.addAll(list);
-                for (int i = 0; i < list.size(); i++) {
-                    paymentOptions.remove(list.get(i).getTitle());
-                }
-                mAdapter.notifyDataSetChanged();
-                setTotalAmount();
-            }
+        if (pref.getBooleanValue(KEY_SAVE)) {
+            myAsyncTask = new MyAsyncTask(this);
+            myAsyncTask.execute();
         }
     }
 
@@ -107,11 +98,12 @@ public class AddPaymentFragment extends Fragment {
             }
         });
         btnSave.setOnClickListener(v -> {
-            if (!data.isEmpty()){
+            if (!data.isEmpty()) {
                 String fileData = (new Gson()).toJson(data);
-                Utils.saveTextToFile(getActivity(),FILENAME, fileData);
+                Utils.saveTextToFile(getActivity(), FILENAME, fileData);
+                pref.setBooleanValue(KEY_SAVE, true);
                 Toast.makeText(requireContext(), getResources().getString(R.string.save), Toast.LENGTH_SHORT).show();
-            }else{
+            } else {
                 Toast.makeText(requireContext(), getResources().getString(R.string.valid_save), Toast.LENGTH_SHORT).show();
             }
         });
@@ -119,11 +111,10 @@ public class AddPaymentFragment extends Fragment {
 
     private void initPaymentOptions() {
         cash = getResources().getString(R.string.cash);
-        bankTransfer = getResources().getString(R.string.bank_transfer);
-        creditCard = getResources().getString(R.string.credit_card);
-        paymentOptions.add(bankTransfer);
+        paymentOptions.add(getResources().getString(R.string.bank_transfer));
         paymentOptions.add(cash);
-        paymentOptions.add(creditCard);
+        paymentOptions.add(getResources().getString(R.string.credit_card));
+        paymentOptions.add(getResources().getString(R.string.other));
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -132,7 +123,7 @@ public class AddPaymentFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mAdapter = new AddPaymentRVAdapter(getActivity(), data);
         mAdapter.setClickListener((view, position) -> {
-            if (!paymentOptions.contains(data.get(position).getTitle())){
+            if (!paymentOptions.contains(data.get(position).getTitle())) {
                 paymentOptions.add(data.get(position).getTitle());
             }
             data.remove(data.get(position));
@@ -150,7 +141,7 @@ public class AddPaymentFragment extends Fragment {
             setTotalAmount();
             paymentOptions.remove(selectedTitle);
             mAdapter.notifyDataSetChanged();
-        }else{
+        } else {
             Toast.makeText(requireContext(), getResources().getString(R.string.entry_already_added), Toast.LENGTH_SHORT).show();
         }
     }
@@ -162,7 +153,7 @@ public class AddPaymentFragment extends Fragment {
 
     public void addPaymentDialog() {
         // create the custom dialog
-        final Dialog dialog = new Dialog(requireContext());
+        dialog = new Dialog(requireContext());
         dialog.setContentView(R.layout.dialog_add_payment);
         Window window = dialog.getWindow();
         window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
@@ -185,15 +176,15 @@ public class AddPaymentFragment extends Fragment {
             String verifiedAmount = amount.getText().toString().trim();
             String verifiedBankDetails = bankDetails.getText().toString().trim();
             String verifiedTransactionRef = transactionRef.getText().toString().trim();
-            if (verifiedAmount.isEmpty()){
+            if (verifiedAmount.isEmpty()) {
                 Toast.makeText(requireContext(), getResources().getString(R.string.enter_amount), Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (!selectedTitle.equalsIgnoreCase(cash) && verifiedBankDetails.isEmpty()){
+            if (!selectedTitle.equalsIgnoreCase(cash) && verifiedBankDetails.isEmpty()) {
                 Toast.makeText(requireContext(), getResources().getString(R.string.enter_bank_details), Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (!selectedTitle.equalsIgnoreCase(cash) && verifiedTransactionRef.isEmpty()){
+            if (!selectedTitle.equalsIgnoreCase(cash) && verifiedTransactionRef.isEmpty()) {
                 Toast.makeText(requireContext(), getResources().getString(R.string.enter_transaction), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -201,8 +192,8 @@ public class AddPaymentFragment extends Fragment {
             Transaction transaction;
             if (!selectedTitle.equalsIgnoreCase(cash)) {
                 transaction = new Transaction(selectedTitle, verifiedAmount, verifiedBankDetails, verifiedTransactionRef);
-            }else{
-                transaction = new Transaction(selectedTitle, verifiedAmount, "","");
+            } else {
+                transaction = new Transaction(selectedTitle, verifiedAmount, "", "");
             }
             addTransactionIfNotExists(transaction);
             dialog.dismiss();
@@ -220,8 +211,8 @@ public class AddPaymentFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 selectedTitle = parentView.getItemAtPosition(position).toString();
-                boolean isShow = Objects.equals(selectedTitle, bankTransfer) || Objects.equals(selectedTitle, creditCard);
-                setDetailsVisibility(isShow,bankDetails, transactionRef);
+                boolean isShow = !Objects.equals(selectedTitle, cash);
+                setDetailsVisibility(isShow, bankDetails, transactionRef);
             }
 
             @Override
@@ -231,11 +222,11 @@ public class AddPaymentFragment extends Fragment {
         });
     }
 
-    private void setDetailsVisibility(Boolean isShow,EditText bankDetails, EditText transactionRef) {
+    private void setDetailsVisibility(Boolean isShow, EditText bankDetails, EditText transactionRef) {
         if (isShow) {
             bankDetails.setVisibility(View.VISIBLE);
             transactionRef.setVisibility(View.VISIBLE);
-        }else{
+        } else {
             bankDetails.setText("");
             transactionRef.setText("");
             bankDetails.setVisibility(View.INVISIBLE);
@@ -244,13 +235,64 @@ public class AddPaymentFragment extends Fragment {
     }
 
     @SuppressLint("SetTextI18n")
-    public void setTotalAmount(){
-        BigInteger sum = data.stream()
-                .map(Transaction::getAmounts)
-                .reduce(BigInteger.ZERO, BigInteger::add);
+    public void setTotalAmount() {
+        BigDecimal sum = data.stream().map(Transaction::getAmounts).reduce(BigDecimal.ZERO, BigDecimal::add);
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("en", "IN"));
         String formattedAmount = currencyFormatter.format(sum);
         totalValue.setMovementMethod(new ScrollingMovementMethod());
         totalValue.setText(formattedAmount);
+    }
+
+    @Override
+    public void onPause() {
+        if (dialog != null && dialog.isShowing()) {
+            dialog.dismiss();
+        }
+        super.onPause();
+    }
+
+    private static class MyAsyncTask extends AsyncTask<Void, Void, String> {
+
+        private final WeakReference<AddPaymentFragment> fragment;
+
+        // only retain a weak reference to the fragment
+        MyAsyncTask(AddPaymentFragment fragment) {
+            this.fragment = new WeakReference<>(fragment);
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            return Utils.loadTextFromFile(fragment.get().getActivity(), FILENAME);
+        }
+
+        @SuppressLint("NotifyDataSetChanged")
+        @Override
+        protected void onPostExecute(String json) {
+            AddPaymentFragment paymentFragment = fragment.get();
+            if (paymentFragment == null || paymentFragment.isVisible())
+                return;
+            if (json != null) {
+                Gson gson = new Gson();
+                Type type = new TypeToken<ArrayList<Transaction>>() {
+                }.getType();
+                ArrayList<Transaction> list = gson.fromJson(json, type);
+                if (!list.isEmpty()) {
+                    fragment.get().data.addAll(list);
+                    for (int i = 0; i < list.size(); i++) {
+                        fragment.get().paymentOptions.remove(list.get(i).getTitle());
+                    }
+                    fragment.get().mAdapter.notifyDataSetChanged();
+                    fragment.get().setTotalAmount();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        if (myAsyncTask != null && myAsyncTask.getStatus() == AsyncTask.Status.RUNNING) {
+            myAsyncTask.cancel(true);
+        }
+        super.onDestroy();
     }
 }

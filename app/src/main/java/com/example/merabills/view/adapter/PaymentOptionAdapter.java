@@ -38,6 +38,7 @@ public class PaymentOptionAdapter extends BaseAdapter implements SpinnerAdapter 
         } else {
             textView = (TextView) convertView;
         }
+        textView.setPadding(10,10,10,10);
         textView.setText(mData.get(position));
         return textView;
     }

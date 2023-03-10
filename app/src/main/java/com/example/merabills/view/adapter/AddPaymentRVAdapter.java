@@ -41,7 +41,6 @@ public class AddPaymentRVAdapter extends RecyclerView.Adapter<AddPaymentRVAdapte
     public void onBindViewHolder(ViewHolder holder, int position) {
         Transaction item = mData.get(position);
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("en", "IN"));
-
         holder.myTextView.setText(item.getTitle() + " = " +  currencyFormatter.format(item.getAmounts()));
     }
 
